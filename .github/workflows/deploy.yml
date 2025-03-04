@@ -6,6 +6,7 @@ on:
       env-vars:
         description: 'JSON string of project specific environment variables'
         required: false
+        type: string
         default: '{}'
 
 jobs:
