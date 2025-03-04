@@ -3,7 +3,7 @@ name: Deploy Workflow
 on:
   workflow_call:
     inputs:
-      config:
+      env-vals:
         description: 'JSON string of project specific environment variables'
         required: false
         type: string
@@ -48,17 +48,11 @@ jobs:
         env:
           ENV_JSON: ${{ inputs.env-vars }}
         run: |
-          # Write SSH key to a temporary file
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key
-          chmod 600 ssh_key
-
-          # Parse project specific environment variables into Docker flags
           ENV_FLAGS=$(echo "$ENV_JSON" | jq -r 'to_entries | map("-e \(.key)=\(.value)") | join(" ")')
           CONTAINER_NAME=$(echo "${{ needs.set-vals.outputs.image-name }}" | cut -d':' -f1)
           FULL_IMAGE_NAME="${{ secrets.DOCKER_REPO }}/${{ needs.set-vals.outputs.image-name }}"
-
-          # SSH into the server and deploy
-          ssh -i ssh_key "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}" << EOF
+            
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh -i - "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}" << EOF
             echo "Pulling Docker image: $FULL_IMAGE_NAME"
             docker pull "$FULL_IMAGE_NAME"
 
