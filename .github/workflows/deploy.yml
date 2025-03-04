@@ -39,7 +39,7 @@ jobs:
           echo "container-name=${CONTAINER_NAME}" >> "$GITHUB_OUTPUT"
 
   build-and-deploy:
-    needs: set-image-name
+    needs: set-deployment-vars
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project code
