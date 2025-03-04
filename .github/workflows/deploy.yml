@@ -15,6 +15,10 @@ jobs:
     outputs:
       image-name: ${{ steps.image-name.outputs.image }}
     steps:
+      - name: Debug Secret
+        run: echo "NEXT_PUBLIC_APP_TEST is ${{ secrets.NEXT_PUBLIC_APP_TEST }}"
+      - run: echo "Deploying with config ${{ inputs.config }}"
+      
       - name: Compute Image Name
         id: image-name
         run: |
