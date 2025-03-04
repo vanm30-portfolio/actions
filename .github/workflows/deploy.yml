@@ -20,7 +20,7 @@ jobs:
       - name: Compute variables
         id: set-vars
         env: 
-          ENV_JSON: ${{ inputs.env_vars }}
+          ENV_JSON: ${{ inputs.env-vars }}
         run: |
           ENV_FLAGS=$(echo "$ENV_JSON" | jq -r 'to_entries | map("-e \(.key)=\(.value)") | join(" ")')
 
@@ -49,8 +49,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ needs.vars.outputs.image_name }}" .
-          docker push "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image_name }}"
+          docker build -t "${{ needs.vars.outputs.image-name }}" .
+          docker push "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
 
       - name: Deploy to production
         uses: appleboy/ssh-action@v0.1.5
@@ -61,7 +61,7 @@ jobs:
           port: 22
           script: |
             echo "Pulling image"
-            docker pull "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image_name }}"
+            docker pull "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
 
             echo "Checking if container ${{ needs.vars.outputs.container-name }} exists..."
             if [ "$(docker ps -aq -f name=^${{ needs.vars.outputs.container-name }}$)" ]; then
@@ -78,6 +78,6 @@ jobs:
               -p "${{ secrets.EXPOSED_PORT }}:${{ secrets.INTERNAL_PORT }}" \
               --name "${{ needs.vars.outputs.container-name }}" \
               ${{ needs.vars.outputs.env-flags }}\
-              "${{ needs.vars.outputs.image-src }}"
+              "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
 
             echo "Deployment complete."
