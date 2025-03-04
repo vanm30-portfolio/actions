@@ -13,10 +13,10 @@ jobs:
   vars:
     runs-on: ubuntu-latest
     outputs:
-      image-name: ${{ steps.image-name.outputs.image }}
-      env-flags: ${{ steps.set-vars.outputs.env-flags }}
-      container-name: ${{ steps.set-vars.outputs.container-name }}
-      image_src: ${{ steps.set-vars.outputs.full-image-name }}
+      image-name: ${{ steps.vars.outputs.image-name}}
+      env-flags: ${{ steps.vars.outputs.env-flags }}
+      container-name: ${{ steps.vars.outputs.container-name }}
+      image_src: ${{ steps.vars.outputs.image_src }}
     steps:
       - name: Compute variables
         id: vars
@@ -53,8 +53,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ needs.vars.outputs.image_src }}" .
-          docker push "${{ needs.vars.outputs.image_src }}"
+          docker build -t "${{ needs.vars.outputs.image_name }}" .
+          docker push "${{ needs.vars.outputs.image_name }}"
 
       - name: Deploy to production
         uses: appleboy/ssh-action@v0.1.5
