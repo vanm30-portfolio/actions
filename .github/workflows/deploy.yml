@@ -10,7 +10,7 @@ on:
         default: '{}'
 
 jobs:
-  set-deployment-vars:
+  vars:
     runs-on: ubuntu-latest
     outputs:
       image-name: ${{ steps.image-name.outputs.image }}
@@ -39,7 +39,7 @@ jobs:
           echo "container-name=${CONTAINER_NAME}" >> "$GITHUB_OUTPUT"
 
   build-and-deploy:
-    needs: set-deployment-vars
+    needs: vars
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project code
@@ -53,8 +53,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ needs.set-deployment-vars.outputs.image_src }}" .
-          docker push "${{ needs.set-deployment-vars.outputs.image_src }}"
+          docker build -t "${{ needs.vars.outputs.image_src }}" .
+          docker push "${{ needs.vars.outputs.image_src }}"
 
       - name: Deploy to production
         uses: appleboy/ssh-action@v0.1.5
@@ -65,13 +65,13 @@ jobs:
           port: 22
           script: |
             echo "Pulling image"
-            docker pull "${{ needs.set-deployment-vars.outputs.image_src }}"
+            docker pull "${{ needs.vars.outputs.image_src }}"
 
-            echo "Checking if container ${{ needs.set-deployment-vars.outputs.container-name }} exists..."
-            if [ "$(docker ps -aq -f name=^${{ needs.set-deployment-vars.outputs.container-name }}$)" ]; then
+            echo "Checking if container ${{ needs.vars.outputs.container-name }} exists..."
+            if [ "$(docker ps -aq -f name=^${{ needs.vars.outputs.container-name }}$)" ]; then
               echo "Stopping and removing existing container..."
-              docker stop "${{ needs.set-deployment-vars.outputs.container-name }}"
-              docker rm "${{ needs.set-deployment-vars.outputs.container-name }}"
+              docker stop "${{ needs.vars.outputs.container-name }}"
+              docker rm "${{ needs.vars.outputs.container-name }}"
             else
               echo "No existing container found."
             fi
@@ -80,8 +80,8 @@ jobs:
             docker run -d \
               --restart unless-stopped \
               -p "${{ secrets.EXPOSED_PORT }}:${{ secrets.INTERNAL_PORT }}" \
-              --name "${{ needs.set-deployment-vars.outputs.container-name }}" \
-              ${{ needs.set-deployment-vars.outputs.env-flags }}\
-              "${{ needs.set-deployment-vars.outputs.image-src }}"
+              --name "${{ needs.vars.outputs.container-name }}" \
+              ${{ needs.vars.outputs.env-flags }}\
+              "${{ needs.vars.outputs.image-src }}"
 
             echo "Deployment complete."
