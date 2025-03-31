@@ -2,12 +2,6 @@ name: Deploy Workflow
 
 on:
   workflow_call:
-    inputs:
-      env-vars:
-        description: 'JSON string of project specific environment variables'
-        required: false
-        type: string
-        default: '{}'
 
 jobs:
   vars:
@@ -20,9 +14,9 @@ jobs:
       - name: Compute variables
         id: set-vars
         env: 
-          ENV_JSON: ${{ inputs.env-vars }}
+          ENV_JSON: ${{ secrets.ENV_VARS }}
         run: |
-          ENV_FLAGS=$(echo "$ENV_JSON" | jq -r 'to_entries | map("-e \(.key)=\(.value)") | join(" ")')
+          ENV_FLAGS=$(echo "$ENV_JSON" | jq -r 'to_entries | map("-env \(.key)=\(.value)") | join(" ")')
 
           REF="${{ github.ref }}"
           TAG_NAME="${REF##*/}"
