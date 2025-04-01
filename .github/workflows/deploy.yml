@@ -17,7 +17,7 @@ jobs:
           ENV_VARS: ${{ secrets.ENV_VARS }}
         run: |
           echo "DEBUG: ENV_VARS=$ENV_VARS"
-          ENV_FLAGS=$(echo "$ENV_VARS" | awk '{print "-e " $1}' | paste -sd ' ' -)
+          ENV_FLAGS=$(echo "$ENV_VARS" | tr ' ' '\n' | awk '{print "-e " $1}' | paste -sd ' ' -)
           REF="${{ github.ref }}"
           TAG_NAME="${REF##*/}"
           REPO_NAME="${{ github.event.repository.name }}"
