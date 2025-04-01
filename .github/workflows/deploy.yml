@@ -7,7 +7,7 @@ jobs:
   vars:
     runs-on: ubuntu-latest
     outputs:
-      image-name: ${{ steps.set-vars.outputs.image-name}}
+      image-name: ${{ steps.set-vars.outputs.image-name }}
       env-flags: ${{ steps.set-vars.outputs.env-flags }}
       container-name: ${{ steps.set-vars.outputs.container-name }}
     steps:
@@ -24,6 +24,7 @@ jobs:
           CONTAINER_NAME=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME="${CONTAINER_NAME}:${TAG_NAME}"
 
+          echo "DEBUG: ENV_FLAGS=$ENV_FLAGS"
           echo "image-name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
           echo "container-name=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
           echo "env-flags=$ENV_FLAGS" >> $GITHUB_OUTPUT
