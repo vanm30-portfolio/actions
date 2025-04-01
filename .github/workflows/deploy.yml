@@ -71,7 +71,7 @@ jobs:
               --restart unless-stopped \
               -p "${{ secrets.EXPOSED_PORT }}:${{ secrets.INTERNAL_PORT }}" \
               --name "${{ needs.vars.outputs.container-name }}" \
-              ${{ needs.vars.outputs.env-flags }}\
+              ${{ needs.vars.outputs.env-flags }} \
               "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
 
             echo "Deployment complete."
