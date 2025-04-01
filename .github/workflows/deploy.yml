@@ -4,12 +4,8 @@ on:
   workflow_call:
 
 jobs:
-  vars:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    outputs:
-      image-name: ${{ steps.set-vars.outputs.image-name }}
-      env-flags: ${{ steps.set-vars.outputs.env-flags }}
-      container-name: ${{ steps.set-vars.outputs.container-name }}
     steps:
       - name: Compute variables
         id: set-vars
@@ -25,14 +21,10 @@ jobs:
           IMAGE_NAME="${CONTAINER_NAME}:${TAG_NAME}"
 
           echo "DEBUG: ENV_FLAGS=$ENV_FLAGS"
-          echo "image-name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "container-name=${CONTAINER_NAME}" >> $GITHUB_OUTPUT
-          echo "env-flags=$ENV_FLAGS" >> $GITHUB_OUTPUT
+          echo "image-name=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "container-name=${CONTAINER_NAME}" >> $GITHUB_ENV
+          echo "env-flags=${ENV_FLAGS}" >> $GITHUB_ENV
 
-  build-and-deploy:
-    needs: vars
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout project code
         uses: actions/checkout@v4
 
@@ -44,8 +36,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}" .
-          docker push "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
+          docker build -t "${{ secrets.DOCKER_REPO }}/${{ env.image-name }}" .
+          docker push "${{ secrets.DOCKER_REPO }}/${{ env.image-name }}"
 
       - name: Deploy to production
         uses: appleboy/ssh-action@v0.1.5
@@ -56,13 +48,13 @@ jobs:
           port: 22
           script: |
             echo "Pulling image"
-            docker pull "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
+            docker pull "${{ secrets.DOCKER_REPO }}/${{ env.image-name }}"
 
-            echo "Checking if container ${{ needs.vars.outputs.container-name }} exists..."
-            if [ "$(docker ps -aq -f name=^${{ needs.vars.outputs.container-name }}$)" ]; then
+            echo "Checking if container ${{ env.container-name }} exists..."
+            if [ "$(docker ps -aq -f name=^${{ env.container-name }}$)" ]; then
               echo "Stopping and removing existing container..."
-              docker stop "${{ needs.vars.outputs.container-name }}"
-              docker rm "${{ needs.vars.outputs.container-name }}"
+              docker stop "${{ env.container-name }}"
+              docker rm "${{ env.container-name }}"
             else
               echo "No existing container found."
             fi
@@ -71,8 +63,8 @@ jobs:
             docker run -d \
               --restart unless-stopped \
               -p "${{ secrets.EXPOSED_PORT }}:${{ secrets.INTERNAL_PORT }}" \
-              --name "${{ needs.vars.outputs.container-name }}" \
-              ${{ needs.vars.outputs.env-flags }} \
-              "${{ secrets.DOCKER_REPO }}/${{ needs.vars.outputs.image-name }}"
+              --name "${{ env.container-name }}" \
+              ${{ env.env-flags }} \
+              "${{ secrets.DOCKER_REPO }}/${{ env.image-name }}"
 
             echo "Deployment complete."
