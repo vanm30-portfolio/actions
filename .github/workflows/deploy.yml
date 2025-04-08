@@ -13,30 +13,22 @@ jobs:
         env:
           ENV_VARS: ${{ secrets.ENV_VARS }}
         run: |
-          # Print ENV_VARS for debugging
           echo "DEBUG: ENV_VARS=$ENV_VARS"
 
-          # Prepare build-args string by extracting all NEXT_PUBLIC_* variables from ENV_VARS
           BUILD_ARGS=""
-          for VAR in $(echo "$ENV_VARS" | tr ' ' '\n'); do
+          ENV_FLAGS=""
+
+          while IFS= read -r VAR; do
             if [[ "$VAR" =~ ^NEXT_PUBLIC_ ]]; then
               BUILD_ARGS="$BUILD_ARGS --build-arg $VAR"
-            fi
-          done
-
-          # Prepare runtime flags for docker run (all env vars passed as -e), excluding NEXT_PUBLIC_* variables
-          ENV_FLAGS=""
-          for VAR in $(echo "$ENV_VARS" | tr ' ' '\n'); do
-            if [[ ! "$VAR" =~ ^NEXT_PUBLIC_ ]]; then
+            else
               ENV_FLAGS="$ENV_FLAGS -e $VAR"
             fi
-          done
+          done <<< "$ENV_VARS"
 
-          # Debugging output to verify extracted arguments
           echo "DEBUG: BUILD_ARGS=$BUILD_ARGS"
           echo "DEBUG: ENV_FLAGS=$ENV_FLAGS"
 
-          # Prepare other environment variables and container name
           REF="${{ github.ref }}"
           TAG_NAME="${REF##*/}"
           REPO_NAME="${{ github.event.repository.name }}"
